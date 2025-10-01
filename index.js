@@ -1283,16 +1283,20 @@ async function startBot() {
       const { connection, qr } = update;
 
       if (qr) {
-        console.log("\n" + "=".repeat(60));
+        console.log("\n" + "=".repeat(80));
         console.log("📱 WHATSAPP QR CODE - SCAN WITH YOUR PHONE");
-        console.log("=".repeat(60));
+        console.log("=".repeat(80));
         console.log("📱 Go to: WhatsApp → Settings → Linked Devices → Link a Device");
         console.log("📱 Then scan the QR code below:");
-        console.log("-".repeat(60));
-        qrcode.generate(qr, { small: true });
-        console.log("-".repeat(60));
+        console.log("-".repeat(80));
+        console.log("🔗 QR CODE TEXT (Copy this and convert to QR):");
+        console.log("-".repeat(80));
+        console.log(qr);
+        console.log("-".repeat(80));
+        console.log("🌐 OR use this QR generator: https://www.qr-code-generator.com/");
+        console.log("📋 Copy the text above and paste it in the QR generator");
         console.log("⏳ Waiting for QR scan...");
-        console.log("=".repeat(60) + "\n");
+        console.log("=".repeat(80) + "\n");
       }
 
       if (connection === "open") {
