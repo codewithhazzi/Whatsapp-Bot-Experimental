@@ -1283,9 +1283,16 @@ async function startBot() {
       const { connection, qr } = update;
 
       if (qr) {
-        console.log("\n📱 Scan This QR Code Below:\n");
+        console.log("\n" + "=".repeat(60));
+        console.log("📱 WHATSAPP QR CODE - SCAN WITH YOUR PHONE");
+        console.log("=".repeat(60));
+        console.log("📱 Go to: WhatsApp → Settings → Linked Devices → Link a Device");
+        console.log("📱 Then scan the QR code below:");
+        console.log("-".repeat(60));
         qrcode.generate(qr, { small: true });
-        console.log("\n⏳ Waiting for QR scan...\n");
+        console.log("-".repeat(60));
+        console.log("⏳ Waiting for QR scan...");
+        console.log("=".repeat(60) + "\n");
       }
 
       if (connection === "open") {
