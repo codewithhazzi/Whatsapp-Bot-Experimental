@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Task Bot - Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="env-loader.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-robot"></i> Team Bot Admin</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="#users" class="nav-item" data-section="users">
+                <i class="fas fa-users"></i> Users
+            </a>
+            <a href="#tasks" class="nav-item" data-section="tasks">
+                <i class="fas fa-tasks"></i> Tasks
+            </a>
+            <a href="#projects" class="nav-item" data-section="projects">
+                <i class="fas fa-project-diagram"></i> Projects
+            </a>
+            <a href="#analytics" class="nav-item" data-section="analytics">
+                <i class="fas fa-chart-bar"></i> Analytics
+            </a>
+            <a href="#leaderboard" class="nav-item" data-section="leaderboard">
+                <i class="fas fa-trophy"></i> Leaderboard
+            </a>
+            <a href="#broadcast" class="nav-item" data-section="broadcast">
+                <i class="fas fa-bullhorn"></i> Broadcast
+            </a>
+            <a href="#status" class="nav-item" data-section="status">
+                <i class="fas fa-heartbeat"></i> Status
+            </a>
+            <a href="#settings" class="nav-item" data-section="settings">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span id="currentUser">Admin</span>
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalUsers">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalTasks">0</h3>
+                        <p>Total Tasks</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="completedTasks">0</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="pendingTasks">0</h3>
+                        <p>Pending</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Recent Tasks</h3>
+                    <div id="recentTasks" class="task-list">
+                        <!-- Recent tasks will be loaded here -->
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Top Performers</h3>
+                    <div id="topPerformers" class="performer-list">
+                        <!-- Top performers will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Users Section -->
+        <section id="users" class="content-section">
+            <div class="section-header">
+                <h2>User Management</h2>
+                <button class="btn btn-primary" onclick="openUserModal()">
+                    <i class="fas fa-plus"></i> Add User
+                </button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>WhatsApp ID</th>
+                            <th>Total Tasks</th>
+                            <th>Completed</th>
+                            <th>Strikes</th>
+                            <th>Last Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tasks Section -->
+        <section id="tasks" class="content-section">
+            <div class="section-header">
+                <h2>Task Management</h2>
+                <div class="filter-controls">
+                    <select id="taskFilter">
+                        <option value="all">All Tasks</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                    <input type="date" id="dateFilter" placeholder="Filter by date">
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>User</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksTableBody">
+                        <!-- Tasks will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="content-section">
+            <div class="section-header">
+                <h2>Projects & Clients</h2>
+                <button class="btn btn-primary" onclick="openProjectModal()">
+                    <i class="fas fa-plus"></i> Add Project
+                </button>
+            </div>
+            <div class="projects-grid" id="projectsGrid">
+                <!-- Projects will be loaded here -->
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="content-section">
+            <div class="section-header">
+                <h2>Analytics & Reports</h2>
+                <div class="date-range">
+                    <input type="date" id="startDate">
+                    <span>to</span>
+                    <input type="date" id="endDate">
+                    <button class="btn btn-secondary" onclick="generateReport()">Generate Report</button>
+                </div>
+            </div>
+            <div class="analytics-grid">
+                <div class="chart-container">
+                    <h3>Task Completion Trend</h3>
+                    <canvas id="completionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>User Performance</h3>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaderboard Section -->
+        <section id="leaderboard" class="content-section">
+            <div class="section-header">
+                <h2>Team Leaderboard</h2>
+                <div class="leaderboard-controls">
+                    <select id="leaderboardPeriod">
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+            </div>
+            <div class="leaderboard-container" id="leaderboardContainer">
+                <!-- Leaderboard will be loaded here -->
+            </div>
+        </section>
+
+        <!-- Broadcast Section -->
+        <section id="broadcast" class="content-section">
+            <div class="section-header">
+                <h2>Broadcast Messages</h2>
+            </div>
+            <div class="broadcast-container">
+                <div class="broadcast-form">
+                    <h3>Send Message to Team</h3>
+                    <textarea id="broadcastMessage" placeholder="Type your message here..."></textarea>
+                    <div class="broadcast-options">
+                        <label>
+                            <input type="checkbox" id="includeMotivation"> Include motivational message
+                        </label>
+                        <label>
+                            <input type="checkbox" id="urgentMessage"> Mark as urgent
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendBroadcast()">
+                        <i class="fas fa-paper-plane"></i> Send Broadcast
+                    </button>
+                </div>
+                <div class="broadcast-history">
+                    <h3>Recent Broadcasts</h3>
+                    <div id="broadcastHistory">
+                        <!-- Broadcast history will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Section -->
+        <section id="status" class="content-section">
+            <div class="section-header">
+                <h2>System Status</h2>
+                <button class="btn btn-secondary" onclick="refreshStatus()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            
+            <div class="status-grid">
+                <!-- Firebase Connection Status -->
+                <div class="status-card">
+                    <div class="status-header">
+                        <h3><i class="fas fa-database"></i> Firebase Database</h3>
+                        <div class="status-indicator" id="firebaseStatus">
+                            <i class="fas fa-circle"></i>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+                    <div class="status-details">
+                        <p><strong>Project:</strong> <span id="firebaseProject">-</span></p>
+                        <p><strong>Connection:</strong> <span id="firebaseConnection">-</span></p>
+                        <p><strong>Last Check:</strong> <span id="firebaseLastCheck">-</span></p>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Bot Status -->
+                <div class="status-card">
+                    <div class="status-header">
+                        <h3><i class="fab fa-whatsapp"></i> WhatsApp Bot</h3>
+                        <div class="status-indicator" id="botStatus">
+                            <i class="fas fa-circle"></i>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+                    <div class="status-details">
+                        <p><strong>Status:</strong> <span id="botConnection">-</span></p>
+                        <p><strong>Mode:</strong> <span id="botMode">Individual Chat</span></p>
+                        <p><strong>Last Activity:</strong> <span id="botLastActivity">-</span></p>
+                        <p><strong>Note:</strong> <span style="color: #666; font-size: 0.8rem;">For localhost: Bot status based on Firebase activity</span></p>
+                    </div>
+                </div>
+
+                <!-- Environment Status -->
+                <div class="status-card">
+                    <div class="status-header">
+                        <h3><i class="fas fa-cog"></i> Environment</h3>
+                        <div class="status-indicator" id="envStatus">
+                            <i class="fas fa-circle"></i>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+                    <div class="status-details">
+                        <p><strong>Admin JID:</strong> <span id="adminJid">-</span></p>
+                        <p><strong>Group ID:</strong> <span id="groupId">-</span></p>
+                        <p><strong>Config Loaded:</strong> <span id="configLoaded">-</span></p>
+                    </div>
+                </div>
+
+                <!-- Data Collections Status -->
+                <div class="status-card">
+                    <div class="status-header">
+                        <h3><i class="fas fa-folder"></i> Data Collections</h3>
+                        <div class="status-indicator" id="collectionsStatus">
+                            <i class="fas fa-circle"></i>
+                            <span>Checking...</span>
+                        </div>
+                    </div>
+                    <div class="status-details">
+                        <p><strong>Users:</strong> <span id="usersCount">-</span></p>
+                        <p><strong>Tasks:</strong> <span id="tasksCount">-</span></p>
+                        <p><strong>Projects:</strong> <span id="projectsCount">-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Health Summary -->
+            <div class="health-summary">
+                <h3>System Health Summary</h3>
+                <div class="health-status" id="overallHealth">
+                    <div class="health-indicator">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Checking system health...</span>
+                    </div>
+                </div>
+                
+                <!-- Status Help -->
+                <div class="status-help">
+                    <h4>📋 Status Information:</h4>
+                    <ul>
+                        <li><strong>Firebase Database:</strong> Shows if admin panel can connect to Firebase</li>
+                        <li><strong>WhatsApp Bot:</strong> Shows if bot process is running (checks for recent activity in last 5 minutes)</li>
+                        <li><strong>Environment:</strong> Shows if configuration is loaded properly</li>
+                        <li><strong>Data Collections:</strong> Shows if Firebase collections are accessible</li>
+                    </ul>
+                    <p><strong>Note:</strong> To see "Connected" status and data, make sure to:</p>
+                    <ol>
+                        <li>Start the bot with <code>npm start</code></li>
+                        <li>Ensure Firebase credentials are correct in <code>.env</code></li>
+                        <li>Check that Firestore is enabled in Firebase Console</li>
+                        <li>Use the bot (send messages) to create data in Firebase</li>
+                    </ol>
+                    <p><strong>💡 To get data:</strong> Send any message to the bot via WhatsApp, and it will create user and task data in Firebase.</p>
+                </div>
+                
+                <div class="health-actions">
+                    <button class="btn btn-primary" onclick="testAllConnections()">
+                        <i class="fas fa-play"></i> Test All Connections
+                    </button>
+                    <button class="btn btn-warning" onclick="viewLogs()">
+                        <i class="fas fa-file-alt"></i> View Logs
+                    </button>
+                    <button class="btn btn-info" onclick="toggleBotStatus()">
+                        <i class="fas fa-toggle-on"></i> Toggle Bot Status (Localhost)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="content-section">
+            <div class="section-header">
+                <h2>Bot Settings</h2>
+            </div>
+            <div class="settings-container">
+                <div class="setting-group">
+                    <h3>Reminder Settings</h3>
+                    <div class="setting-item">
+                        <label>Morning Reminder Time</label>
+                        <input type="time" id="morningTime" value="09:00">
+                    </div>
+                    <div class="setting-item">
+                        <label>Evening Check-in Time</label>
+                        <input type="time" id="eveningTime" value="18:00">
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>Strike Settings</h3>
+                    <div class="setting-item">
+                        <label>Max Strikes Before Warning</label>
+                        <input type="number" id="maxStrikes" value="3" min="1" max="10">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add/Edit User</h3>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="userName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp ID</label>
+                        <input type="text" id="userWhatsAppId" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Project Assignment</label>
+                        <select id="userProject" multiple>
+                            <!-- Projects will be loaded here -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add/Edit Project</h3>
+                <span class="close" onclick="closeProjectModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="projectForm">
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input type="text" id="projectName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Client Name</label>
+                        <input type="text" id="clientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="projectDescription"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Users</label>
+                        <select id="projectUsers" multiple>
+                            <!-- Users will be loaded here -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
