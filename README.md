@@ -159,14 +159,12 @@ For issues and questions:
 
 ## Changelog
 
-### v2.0.0
+### v1.0
 - Firebase integration
 - Admin dashboard
 - Menu-based interface
 - Real-time status monitoring
 - Team management features
-
-### v1.0.0
 - Basic WhatsApp bot
 - Task management
 - Local storage
