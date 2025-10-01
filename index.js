@@ -1356,6 +1356,16 @@ const PORT = process.env.PORT || 3000;
 // Serve admin panel
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
+// Admin panel route
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+});
+
+// Admin panel assets
+app.get('/admin/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', req.params[0]));
+});
+
 // Root route - redirect to admin
 app.get('/', (req, res) => {
     res.redirect('/admin');
