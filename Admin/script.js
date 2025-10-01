@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
             initializeDashboard();
             setupEventListeners();
             loadDashboardData();
+            loadSettings(); // Load settings on page load
             initStatusCheck(); // Initialize status checking
         } else {
             console.log("⏳ Waiting for Firebase SDK...");
@@ -712,18 +713,25 @@ async function sendBroadcast() {
             message: finalMessage,
             timestamp: new Date().toISOString(),
             urgent: urgent,
-            recipients: users.length
+            recipients: users.length,
+            status: 'sent'
         };
         
         if (db) {
             await db.collection('broadcasts').add(broadcast);
+            console.log("✅ Broadcast saved to Firebase");
         } else {
             // Fallback to local storage
             const localData = JSON.parse(localStorage.getItem('wa-team-bot') || '{}');
             if (!localData.broadcasts) localData.broadcasts = {};
             localData.broadcasts[Date.now().toString()] = broadcast;
             localStorage.setItem('wa-team-bot', JSON.stringify(localData));
+            console.log("✅ Broadcast saved to local storage");
         }
+        
+        // Add to local broadcasts array for immediate display
+        broadcasts.unshift(broadcast);
+        loadBroadcastHistory();
         
         // Clear form
         document.getElementById('broadcastMessage').value = '';
@@ -925,17 +933,25 @@ async function saveSettings() {
     const settings = {
         morningTime: document.getElementById('morningTime').value,
         eveningTime: document.getElementById('eveningTime').value,
-        maxStrikes: parseInt(document.getElementById('maxStrikes').value)
+        maxStrikes: parseInt(document.getElementById('maxStrikes').value),
+        botName: document.getElementById('botName').value,
+        adminJid: document.getElementById('adminJid').value,
+        groupId: document.getElementById('groupId').value,
+        updatedAt: new Date().toISOString()
     };
     
     try {
+        showLoading(true);
+        
         if (db) {
             await db.collection('settings').doc('bot').set(settings);
+            console.log("✅ Settings saved to Firebase");
         } else {
             // Fallback to local storage
             const localData = JSON.parse(localStorage.getItem('wa-team-bot') || '{}');
             localData.settings = settings;
             localStorage.setItem('wa-team-bot', JSON.stringify(localData));
+            console.log("✅ Settings saved to local storage");
         }
         
         showNotification("Settings saved successfully!", "success");
@@ -943,6 +959,42 @@ async function saveSettings() {
     } catch (error) {
         console.error("Error saving settings:", error);
         showNotification("Error saving settings", "error");
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Load Settings
+async function loadSettings() {
+    try {
+        if (db) {
+            const settingsDoc = await db.collection('settings').doc('bot').get();
+            if (settingsDoc.exists) {
+                const settings = settingsDoc.data();
+                document.getElementById('morningTime').value = settings.morningTime || '09:00';
+                document.getElementById('eveningTime').value = settings.eveningTime || '18:00';
+                document.getElementById('maxStrikes').value = settings.maxStrikes || 3;
+                document.getElementById('botName').value = settings.botName || 'Task Manager Bot';
+                document.getElementById('adminJid').value = settings.adminJid || '923464293816';
+                document.getElementById('groupId').value = settings.groupId || '';
+                console.log("✅ Settings loaded from Firebase");
+            }
+        } else {
+            // Fallback to local storage
+            const localData = JSON.parse(localStorage.getItem('wa-team-bot') || '{}');
+            if (localData.settings) {
+                const settings = localData.settings;
+                document.getElementById('morningTime').value = settings.morningTime || '09:00';
+                document.getElementById('eveningTime').value = settings.eveningTime || '18:00';
+                document.getElementById('maxStrikes').value = settings.maxStrikes || 3;
+                document.getElementById('botName').value = settings.botName || 'Task Manager Bot';
+                document.getElementById('adminJid').value = settings.adminJid || '923464293816';
+                document.getElementById('groupId').value = settings.groupId || '';
+                console.log("✅ Settings loaded from local storage");
+            }
+        }
+    } catch (error) {
+        console.error("Error loading settings:", error);
     }
 }
 
