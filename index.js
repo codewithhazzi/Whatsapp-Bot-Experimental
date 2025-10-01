@@ -1388,6 +1388,62 @@ app.listen(PORT, () => {
 });
 
 // ========================================
+// BROADCAST MESSAGE HANDLER
+// ========================================
+async function checkAndSendBroadcasts() {
+    try {
+        if (!db) return;
+        
+        // Get recent broadcasts (last 5 minutes)
+        const fiveMinutesAgo = new Date();
+        fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+        
+        const broadcastsSnapshot = await db.collection('broadcasts')
+            .where('timestamp', '>=', fiveMinutesAgo.toISOString())
+            .where('status', '==', 'sent')
+            .get();
+        
+        for (const doc of broadcastsSnapshot.docs) {
+            const broadcast = doc.data();
+            
+            // Mark as processing
+            await db.collection('broadcasts').doc(doc.id).update({
+                status: 'processing'
+            });
+            
+            // Get all users
+            const usersSnapshot = await db.collection('users').get();
+            
+            // Send message to each user
+            for (const userDoc of usersSnapshot.docs) {
+                const user = userDoc.data();
+                const jid = user.jid;
+                
+                try {
+                    await sendMessage(sock, jid, `📢 *Broadcast Message*\n\n${broadcast.message}`);
+                    console.log(`✅ Broadcast sent to ${user.userName || 'User'}`);
+                } catch (error) {
+                    console.error(`❌ Failed to send broadcast to ${user.userName}:`, error);
+                }
+            }
+            
+            // Mark as completed
+            await db.collection('broadcasts').doc(doc.id).update({
+                status: 'completed',
+                sentAt: new Date().toISOString()
+            });
+            
+            console.log(`✅ Broadcast completed: ${broadcast.message.substring(0, 50)}...`);
+        }
+    } catch (error) {
+        console.error("Error processing broadcasts:", error);
+    }
+}
+
+// Check for broadcasts every 30 seconds
+setInterval(checkAndSendBroadcasts, 30000);
+
+// ========================================
 // START BOT
 // ========================================
 console.log("🎯 Initializing WhatsApp Team Bot...");
